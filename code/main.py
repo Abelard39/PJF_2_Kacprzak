@@ -1,3 +1,5 @@
+import random
+
 import pygame
 import sys
 from pokethon import Pokethon
@@ -41,6 +43,31 @@ player_images = {
 background_image = pygame.image.load("../res/art/background.jpg")
 background_image = pygame.transform.scale(background_image, (WIDTH, HEIGHT))
 
+pyplay_group = pygame.sprite.Group()
+
+
+class PyPlay(pygame.sprite.Sprite):
+    def __init__(self, pokethon):
+        super().__init__()
+        self.pokethon = pokethon
+        self.image = pokethon.get_pokemon_image()
+        self.rect = self.image.get_rect()
+        self.rect.center = (random.randint(0, WIDTH), random.randint(0, HEIGHT))
+
+    def update(self):
+        self.rect.y += 1
+        if self.rect.top > HEIGHT:
+            self.rect.bottom = 0
+
+
+def spawn_pyplay():
+    random_pokethon = random.choice(available_pokethons)
+    pyplay = PyPlay(random_pokethon)
+    pyplay_group.add(pyplay)
+
+
+SPAWN_EVENT = pygame.USEREVENT + 1
+pygame.time.set_timer(SPAWN_EVENT, 5000)
 
 # Set up the player position and speed
 player_width, player_height = 40, 60
@@ -64,6 +91,8 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+        elif event.type == SPAWN_EVENT:
+            spawn_pyplay()
 
     # Get the state of the arrow keys
     keys = pygame.key.get_pressed()
@@ -130,6 +159,9 @@ while running:
 
     # Draw the player
     screen.blit(current_image, (player_x, player_y))
+
+    for pyplay in pyplay_group:
+        screen.blit(pyplay.image, pyplay.rect)
 
     # Update the display
     pygame.display.flip()

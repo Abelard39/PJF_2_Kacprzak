@@ -16,3 +16,6 @@ class Pokethon:
         self.pokemon_name = self.next_evolution.pokemon_name
         self.pokemon_image = self.next_evolution.pokemon_image
         self.pokemon_hp = self.next_evolution.pokemon_hp
+
+    def get_pokemon_image(self):
+        return self.pokemon_image
