@@ -2,6 +2,7 @@ import random
 
 import pygame
 import sys
+
 from pokethon import Pokethon
 
 # Initialize Pygame
@@ -52,7 +53,7 @@ class PyPlay(pygame.sprite.Sprite):
         self.pokethon = pokethon
         self.image = pokethon.get_image()
         self.rect = self.image.get_rect()
-        self.rect.center = (random.randint(10, WIDTH-10), random.randint(10, HEIGHT-10))
+        self.rect.center = (random.randint(50, WIDTH - 50), random.randint(50, HEIGHT - 50))
 
     def update(self):
         self.rect.y += 1
@@ -64,6 +65,18 @@ def spawn_pyplay():
     random_pokethon = random.choice(available_pokethons)
     pyplay = PyPlay(random_pokethon)
     pyplay_group.add(pyplay)
+
+
+def catch_pokethona():
+    #TODO Pokemon będzie łapany, prosta animacja na klatkach jak rzuca pokebala i łapie pokemona
+    additional_image = pygame.image.load("../res/art/background.jpg")
+    screen.blit(additional_image, (0, 0))  # Adjust coordinates as needed
+
+
+# Define a function to hide the additional images
+def hide_additional_images():
+    # Clear the screen to hide the additional images
+    screen.fill((255, 255, 255))
 
 
 SPAWN_EVENT = pygame.USEREVENT + 1
@@ -91,6 +104,8 @@ player_sprite.rect = current_image.get_rect()
 player_sprite.rect.center = (WIDTH // 2, HEIGHT // 2)  # Center the player on the screen
 player_group.add(player_sprite)
 
+paused = False
+
 # Main game loop
 running = True
 while running:
@@ -103,22 +118,23 @@ while running:
             spawn_pyplay()
 
     keys = pygame.key.get_pressed()
-    if keys[pygame.K_LEFT]:
-        player_sprite.rect.x -= player_speed
-        moving = True
-        direction = 180
-    if keys[pygame.K_RIGHT]:
-        player_sprite.rect.x += player_speed
-        moving = True
-        direction = 0
-    if keys[pygame.K_UP]:
-        player_sprite.rect.y -= player_speed
-        moving = True
-        direction = 90
-    if keys[pygame.K_DOWN]:
-        player_sprite.rect.y += player_speed
-        moving = True
-        direction = 270
+    if not paused:
+        if keys[pygame.K_LEFT]:
+            player_sprite.rect.x -= player_speed
+            moving = True
+            direction = 180
+        if keys[pygame.K_RIGHT]:
+            player_sprite.rect.x += player_speed
+            moving = True
+            direction = 0
+        if keys[pygame.K_UP]:
+            player_sprite.rect.y -= player_speed
+            moving = True
+            direction = 90
+        if keys[pygame.K_DOWN]:
+            player_sprite.rect.y += player_speed
+            moving = True
+            direction = 270
 
     if not any(keys):
         moving = False
@@ -171,9 +187,9 @@ while running:
     # Draw the player at the center of the screen
     screen.blit(current_image, (WIDTH // 2 - player_width // 2, HEIGHT // 2 - player_height // 2))
 
-    # Draw PyPlay objects with camera offset
-    for pyplay in pyplay_group:
-        screen.blit(pyplay.image, (pyplay.rect.x - camera_offset_x, pyplay.rect.y - camera_offset_y))
+    if not paused:
+        for pyplay in pyplay_group:
+            screen.blit(pyplay.image, (pyplay.rect.x - camera_offset_x, pyplay.rect.y - camera_offset_y))
 
     # Check for collisions between player and PyPlay objects
     collisions = pygame.sprite.spritecollide(player_sprite, pyplay_group, True)
@@ -181,6 +197,10 @@ while running:
     # Perform actions when a collision is detected
     for collision in collisions:
         print("Collision with", collision.pokethon.name)  # Example action, replace with your own logic
+        paused = True
+
+    if paused:
+        catch_pokethona()
 
     # Update the display
     pygame.display.flip()
