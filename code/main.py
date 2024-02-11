@@ -50,9 +50,9 @@ class PyPlay(pygame.sprite.Sprite):
     def __init__(self, pokethon):
         super().__init__()
         self.pokethon = pokethon
-        self.image = pokethon.get_pokemon_image()
+        self.image = pokethon.get_image()
         self.rect = self.image.get_rect()
-        self.rect.center = (random.randint(0, WIDTH), random.randint(0, HEIGHT))
+        self.rect.center = (random.randint(10, WIDTH-10), random.randint(10, HEIGHT-10))
 
     def update(self):
         self.rect.y += 1
@@ -79,14 +79,22 @@ frame_count = 0
 animation_speed = 10  # Adjust animation speed by changing the value
 direction = 270
 
+# Create a sprite group for the player
+player_group = pygame.sprite.GroupSingle()
+
+current_image = player_images["down_idle"]
+
+# Create the player sprite
+player_sprite = pygame.sprite.Sprite()
+player_sprite.image = current_image  # Use the current image of the player
+player_sprite.rect = current_image.get_rect()
+player_sprite.rect.center = (WIDTH // 2, HEIGHT // 2)  # Center the player on the screen
+player_group.add(player_sprite)
+
 # Main game loop
 running = True
 while running:
     screen.fill((255, 255, 255))
-
-    # Calculate the offset for the camera to follow the player
-    camera_offset_x = player_x - (WIDTH // 2)
-    camera_offset_y = player_y - (HEIGHT // 2)
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -96,27 +104,28 @@ while running:
 
     keys = pygame.key.get_pressed()
     if keys[pygame.K_LEFT]:
-        player_x -= player_speed
+        player_sprite.rect.x -= player_speed
         moving = True
         direction = 180
     if keys[pygame.K_RIGHT]:
-        player_x += player_speed
+        player_sprite.rect.x += player_speed
         moving = True
         direction = 0
     if keys[pygame.K_UP]:
-        player_y -= player_speed
+        player_sprite.rect.y -= player_speed
         moving = True
         direction = 90
     if keys[pygame.K_DOWN]:
-        player_y += player_speed
+        player_sprite.rect.y += player_speed
         moving = True
         direction = 270
 
     if not any(keys):
         moving = False
 
-    player_x = max(0, min(player_x, WIDTH - player_width))
-    player_y = max(0, min(player_y, HEIGHT - player_height))
+    # Boundaries to keep the player within the screen
+    player_sprite.rect.x = max(0, min(player_sprite.rect.x, WIDTH - player_width))
+    player_sprite.rect.y = max(0, min(player_sprite.rect.y, HEIGHT - player_height))
 
     if moving:
         frame_count += 1
@@ -152,15 +161,26 @@ while running:
 
     current_image = pygame.transform.scale(current_image, (player_width, player_height))
 
+    # Calculate the camera offset
+    camera_offset_x = player_sprite.rect.x - (WIDTH // 2)
+    camera_offset_y = player_sprite.rect.y - (HEIGHT // 2)
+
     # Draw the background with camera offset
     screen.blit(background_image, (-camera_offset_x, -camera_offset_y))
 
-    # Draw the player with camera offset
-    screen.blit(current_image, (player_x - camera_offset_x, player_y - camera_offset_y))
+    # Draw the player at the center of the screen
+    screen.blit(current_image, (WIDTH // 2 - player_width // 2, HEIGHT // 2 - player_height // 2))
 
     # Draw PyPlay objects with camera offset
     for pyplay in pyplay_group:
         screen.blit(pyplay.image, (pyplay.rect.x - camera_offset_x, pyplay.rect.y - camera_offset_y))
+
+    # Check for collisions between player and PyPlay objects
+    collisions = pygame.sprite.spritecollide(player_sprite, pyplay_group, True)
+
+    # Perform actions when a collision is detected
+    for collision in collisions:
+        print("Collision with", collision.pokethon.name)  # Example action, replace with your own logic
 
     # Update the display
     pygame.display.flip()
@@ -171,4 +191,3 @@ while running:
 # Quit Pygame
 pygame.quit()
 sys.exit()
-

@@ -3,19 +3,17 @@ from pygame import Surface
 
 
 class Pokethon:
-    pokemon_name: str
-    pokemon_image: Surface
-    pokemon_hp: int
+    name: str
+    image: Surface
 
     def __init__(self, pokemon_name, pokemon_image, next_evolution):
-        self.pokemon_name = pokemon_name
-        self.pokemon_image = pygame.image.load("../res/art/pokethons/" + pokemon_image + ".png")
+        self.name = pokemon_name
+        self.image = pygame.image.load("../res/art/pokethons/" + pokemon_image + ".png")
         self.next_evolution = next_evolution
 
     def evolve(self):
-        self.pokemon_name = self.next_evolution.pokemon_name
-        self.pokemon_image = self.next_evolution.pokemon_image
-        self.pokemon_hp = self.next_evolution.pokemon_hp
+        self.name = self.next_evolution.name
+        self.image = self.next_evolution.image
 
-    def get_pokemon_image(self):
-        return self.pokemon_image
+    def get_image(self):
+        return self.image
