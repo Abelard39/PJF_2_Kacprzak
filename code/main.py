@@ -81,12 +81,12 @@ direction = 270
 
 # Main game loop
 running = True
-moving = False  # Flag to check if the player is moving
 while running:
     screen.fill((255, 255, 255))
 
-    # Draw the background
-    screen.blit(background_image, (0, 0))
+    # Calculate the offset for the camera to follow the player
+    camera_offset_x = player_x - (WIDTH // 2)
+    camera_offset_y = player_y - (HEIGHT // 2)
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -94,10 +94,7 @@ while running:
         elif event.type == SPAWN_EVENT:
             spawn_pyplay()
 
-    # Get the state of the arrow keys
     keys = pygame.key.get_pressed()
-
-    # Update player position based on arrow key presses
     if keys[pygame.K_LEFT]:
         player_x -= player_speed
         moving = True
@@ -118,11 +115,9 @@ while running:
     if not any(keys):
         moving = False
 
-    # Boundaries to keep the player within the screen
     player_x = max(0, min(player_x, WIDTH - player_width))
     player_y = max(0, min(player_y, HEIGHT - player_height))
 
-    # Display appropriate player image based on movement
     if moving:
         frame_count += 1
         if direction == 270:
@@ -157,11 +152,15 @@ while running:
 
     current_image = pygame.transform.scale(current_image, (player_width, player_height))
 
-    # Draw the player
-    screen.blit(current_image, (player_x, player_y))
+    # Draw the background with camera offset
+    screen.blit(background_image, (-camera_offset_x, -camera_offset_y))
 
+    # Draw the player with camera offset
+    screen.blit(current_image, (player_x - camera_offset_x, player_y - camera_offset_y))
+
+    # Draw PyPlay objects with camera offset
     for pyplay in pyplay_group:
-        screen.blit(pyplay.image, pyplay.rect)
+        screen.blit(pyplay.image, (pyplay.rect.x - camera_offset_x, pyplay.rect.y - camera_offset_y))
 
     # Update the display
     pygame.display.flip()
@@ -172,3 +171,4 @@ while running:
 # Quit Pygame
 pygame.quit()
 sys.exit()
+
