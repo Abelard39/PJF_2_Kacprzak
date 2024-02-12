@@ -1,4 +1,5 @@
 import random
+import time
 
 import pygame
 import sys
@@ -21,6 +22,7 @@ charmander = Pokethon("Charmander", "004", charmeleon)
 blastoise = Pokethon("Blastoise", "009", None)
 wartortle = Pokethon("Wartortle", "008", blastoise)
 squirtle = Pokethon("Squirtle", "007", wartortle)
+paused = False
 
 available_pokethons = [bulbasaur, ivysaur, venusaur, charmander, charmeleon, charizard, squirtle, wartortle, blastoise]
 
@@ -41,10 +43,15 @@ player_images = {
 
 }
 
-background_image = pygame.image.load("../res/art/background.jpg")
-background_image = pygame.transform.scale(background_image, (WIDTH, HEIGHT))
+background_inner = pygame.image.load("../res/art/map_inner.png")
+background_inner = pygame.transform.scale(background_inner, (WIDTH, HEIGHT))
+
+background_outer = pygame.image.load("../res/art/map_outer.png")
+background_outer = pygame.transform.scale(background_outer, (WIDTH, HEIGHT))
 
 pyplay_group = pygame.sprite.Group()
+
+curr_pokethon = None
 
 
 class PyPlay(pygame.sprite.Sprite):
@@ -67,10 +74,35 @@ def spawn_pyplay():
     pyplay_group.add(pyplay)
 
 
-def catch_pokethona():
-    #TODO Pokemon będzie łapany, prosta animacja na klatkach jak rzuca pokebala i łapie pokemona
-    additional_image = pygame.image.load("../res/art/background.jpg")
-    screen.blit(additional_image, (0, 0))  # Adjust coordinates as needed
+def catch_pokethona(pokethon):
+    global paused
+    for i in range(1, 6):
+        catch_bg = pygame.image.load("../res/art/catch_bg.png")
+        catch_bg = pygame.transform.scale(catch_bg, (WIDTH, HEIGHT))
+        screen.blit(catch_bg, (0, 0))  # Adjust coordinates as needed
+        curr_anim = pygame.image.load("../res/art/player_throw/throw" + str(i) + ".png")
+        curr_anim = pygame.transform.scale(curr_anim, (WIDTH / 3, WIDTH / 3))
+        screen.blit(curr_anim, (0, HEIGHT - curr_anim.get_height()))
+        poke = pygame.transform.scale(pokethon.image, (pokethon.image.get_width() * 2, pokethon.image.get_height() * 2))
+        screen.blit(poke, (WIDTH - 300, 100))
+        if i > 3:
+            pokeball = pygame.image.load("../res/art/pokeball.png")
+            pokeball = pygame.transform.scale(pokeball, (40, 40))
+            screen.blit(pokeball, (0 + (i-2) * 180, HEIGHT - curr_anim.get_height() - 70 * (i-3)))
+        pygame.display.flip()
+        pygame.time.delay(500)
+    catch_bg = pygame.image.load("../res/art/catch_bg.png")
+    catch_bg = pygame.transform.scale(catch_bg, (WIDTH, HEIGHT))
+    screen.blit(catch_bg, (0, 0))  # Adjust coordinates as needed
+    curr_anim = pygame.image.load("../res/art/player_throw/throw5.png")
+    curr_anim = pygame.transform.scale(curr_anim, (WIDTH / 3, WIDTH / 3))
+    screen.blit(curr_anim, (0, HEIGHT - curr_anim.get_height()))
+    bang = pygame.image.load("../res/art/BANG.png")
+    bang = pygame.transform.scale(bang, (pokethon.image.get_width() * 2, pokethon.image.get_height() * 2))
+    screen.blit(bang, (WIDTH - 300, 100))
+    pygame.display.flip()
+    pygame.time.delay(500)
+    paused = False
 
 
 # Define a function to hide the additional images
@@ -104,7 +136,8 @@ player_sprite.rect = current_image.get_rect()
 player_sprite.rect.center = (WIDTH // 2, HEIGHT // 2)  # Center the player on the screen
 player_group.add(player_sprite)
 
-paused = False
+# Cap the frame rate
+pygame.time.Clock().tick(60)
 
 # Main game loop
 running = True
@@ -181,8 +214,9 @@ while running:
     camera_offset_x = player_sprite.rect.x - (WIDTH // 2)
     camera_offset_y = player_sprite.rect.y - (HEIGHT // 2)
 
+    screen.blit(background_outer, (0, 0))
     # Draw the background with camera offset
-    screen.blit(background_image, (-camera_offset_x, -camera_offset_y))
+    screen.blit(background_inner, (-camera_offset_x, -camera_offset_y))
 
     # Draw the player at the center of the screen
     screen.blit(current_image, (WIDTH // 2 - player_width // 2, HEIGHT // 2 - player_height // 2))
@@ -197,16 +231,15 @@ while running:
     # Perform actions when a collision is detected
     for collision in collisions:
         print("Collision with", collision.pokethon.name)  # Example action, replace with your own logic
+        curr_pokethon = collision.pokethon
         paused = True
 
     if paused:
-        catch_pokethona()
+        catch_pokethona(curr_pokethon)
 
     # Update the display
     pygame.display.flip()
 
-    # Cap the frame rate
-    pygame.time.Clock().tick(60)
 
 # Quit Pygame
 pygame.quit()
