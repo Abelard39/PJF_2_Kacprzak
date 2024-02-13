@@ -1,5 +1,4 @@
 import random
-import time
 
 import pygame
 import sys
@@ -23,6 +22,8 @@ blastoise = Pokethon("Blastoise", "009", None)
 wartortle = Pokethon("Wartortle", "008", blastoise)
 squirtle = Pokethon("Squirtle", "007", wartortle)
 paused = False
+fight = False
+inventory = False
 
 available_pokethons = [bulbasaur, ivysaur, venusaur, charmander, charmeleon, charizard, squirtle, wartortle, blastoise]
 
@@ -43,10 +44,10 @@ player_images = {
 
 }
 
-background_inner = pygame.image.load("../res/art/map_inner.png")
+background_inner = pygame.image.load("../res/art/bg/map_inner.png")
 background_inner = pygame.transform.scale(background_inner, (WIDTH, HEIGHT))
 
-background_outer = pygame.image.load("../res/art/map_outer.png")
+background_outer = pygame.image.load("../res/art/bg/map_outer.png")
 background_outer = pygame.transform.scale(background_outer, (WIDTH, HEIGHT))
 
 pyplay_group = pygame.sprite.Group()
@@ -74,10 +75,17 @@ def spawn_pyplay():
     pyplay_group.add(pyplay)
 
 
+def show_inventory():
+    global paused
+    global inventory
+    pass
+
+
 def catch_pokethona(pokethon):
     global paused
+    global fight
     for i in range(1, 6):
-        catch_bg = pygame.image.load("../res/art/catch_bg.png")
+        catch_bg = pygame.image.load("../res/art/bg/catch_bg.png")
         catch_bg = pygame.transform.scale(catch_bg, (WIDTH, HEIGHT))
         screen.blit(catch_bg, (0, 0))  # Adjust coordinates as needed
         curr_anim = pygame.image.load("../res/art/player_throw/throw" + str(i) + ".png")
@@ -86,29 +94,24 @@ def catch_pokethona(pokethon):
         poke = pygame.transform.scale(pokethon.image, (pokethon.image.get_width() * 2, pokethon.image.get_height() * 2))
         screen.blit(poke, (WIDTH - 300, 100))
         if i > 3:
-            pokeball = pygame.image.load("../res/art/pokeball.png")
+            pokeball = pygame.image.load("../res/art/assets/pokeball.png")
             pokeball = pygame.transform.scale(pokeball, (40, 40))
-            screen.blit(pokeball, (0 + (i-2) * 180, HEIGHT - curr_anim.get_height() - 70 * (i-3)))
+            screen.blit(pokeball, (0 + (i - 2) * 180, HEIGHT - curr_anim.get_height() - 70 * (i - 3)))
         pygame.display.flip()
         pygame.time.delay(500)
-    catch_bg = pygame.image.load("../res/art/catch_bg.png")
+    catch_bg = pygame.image.load("../res/art/bg/catch_bg.png")
     catch_bg = pygame.transform.scale(catch_bg, (WIDTH, HEIGHT))
     screen.blit(catch_bg, (0, 0))  # Adjust coordinates as needed
     curr_anim = pygame.image.load("../res/art/player_throw/throw5.png")
     curr_anim = pygame.transform.scale(curr_anim, (WIDTH / 3, WIDTH / 3))
     screen.blit(curr_anim, (0, HEIGHT - curr_anim.get_height()))
-    bang = pygame.image.load("../res/art/BANG.png")
+    bang = pygame.image.load("../res/art/assets/BANG.png")
     bang = pygame.transform.scale(bang, (pokethon.image.get_width() * 2, pokethon.image.get_height() * 2))
     screen.blit(bang, (WIDTH - 300, 100))
     pygame.display.flip()
     pygame.time.delay(500)
     paused = False
-
-
-# Define a function to hide the additional images
-def hide_additional_images():
-    # Clear the screen to hide the additional images
-    screen.fill((255, 255, 255))
+    fight = False
 
 
 SPAWN_EVENT = pygame.USEREVENT + 1
@@ -233,13 +236,16 @@ while running:
         print("Collision with", collision.pokethon.name)  # Example action, replace with your own logic
         curr_pokethon = collision.pokethon
         paused = True
+        fight = True
 
     if paused:
-        catch_pokethona(curr_pokethon)
+        if fight:
+            catch_pokethona(curr_pokethon)
+        if inventory:
+            show_inventory()
 
     # Update the display
     pygame.display.flip()
-
 
 # Quit Pygame
 pygame.quit()
