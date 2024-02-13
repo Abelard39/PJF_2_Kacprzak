@@ -9,6 +9,7 @@ from pokethon import Pokethon
 pygame.init()
 
 # Set up the screen
+font = pygame.font.Font(None, 36)
 WIDTH, HEIGHT = 800, 600
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("2D Character Movement")
@@ -26,6 +27,8 @@ fight = False
 inventory = False
 
 available_pokethons = [bulbasaur, ivysaur, venusaur, charmander, charmeleon, charizard, squirtle, wartortle, blastoise]
+
+my_inventory = []
 
 # Load player images
 player_images = {
@@ -55,6 +58,14 @@ pyplay_group = pygame.sprite.Group()
 curr_pokethon = None
 
 
+def get_pokethon_by_name(name):
+    global available_pokethons
+    for pokethon in available_pokethons:
+        if pokethon.name == name:
+            return pokethon
+    return None
+
+
 class PyPlay(pygame.sprite.Sprite):
     def __init__(self, pokethon):
         super().__init__()
@@ -75,9 +86,39 @@ def spawn_pyplay():
     pyplay_group.add(pyplay)
 
 
+def remove_pyplay():
+    if len(pyplay_group) > 0:
+        first_sprite = pyplay_group.sprites()[0]
+        pyplay_group.remove(first_sprite)
+
+
 def show_inventory():
     global paused
     global inventory
+    inventory_dict = {}
+    for pokemon in my_inventory:
+        if pokemon.name in inventory_dict:
+            inventory_dict[pokemon.name] = inventory_dict[pokemon.name] + 1
+        else:
+            inventory_dict[pokemon.name] = 1
+
+    inv_bg = pygame.image.load("../res/art/bg/inventory.png")
+    screen.blit(inv_bg, (0, 0))
+    i = 0
+    j = 0
+    for pokemon in inventory_dict:
+        off = 0
+        if i > 1:
+            off = 16
+        text = font.render(str(inventory_dict[pokemon]), True, (0, 0, 0))
+        show_poke = pygame.transform.scale(get_pokethon_by_name(pokemon).get_image(), (144, 144))
+        screen.blit(show_poke, (32 + i * 192 + off, 32 + j * 192))
+        screen.blit(text, (154 + i * 192 + off, 154 + j * 192))
+        i += 1
+        if i > 3:
+            j += 1
+            i = 0
+        pass
     pass
 
 
@@ -110,12 +151,15 @@ def catch_pokethona(pokethon):
     screen.blit(bang, (WIDTH - 300, 100))
     pygame.display.flip()
     pygame.time.delay(500)
+    my_inventory.append(pokethon)
     paused = False
     fight = False
 
 
 SPAWN_EVENT = pygame.USEREVENT + 1
-pygame.time.set_timer(SPAWN_EVENT, 5000)
+REMOVE_EVENT = pygame.USEREVENT + 2
+pygame.time.set_timer(SPAWN_EVENT, 3000)
+pygame.time.set_timer(REMOVE_EVENT, 8000)
 
 # Set up the player position and speed
 player_width, player_height = 40, 60
@@ -151,7 +195,15 @@ while running:
         if event.type == pygame.QUIT:
             running = False
         elif event.type == SPAWN_EVENT:
-            spawn_pyplay()
+            if not paused:
+                if len(pyplay_group) < 4:
+                    spawn_pyplay()
+        elif event.type == REMOVE_EVENT:
+            remove_pyplay()
+        elif event.type == pygame.KEYDOWN:
+            if event.key == 105:
+                paused = not paused
+                inventory = not inventory
 
     keys = pygame.key.get_pressed()
     if not paused:
@@ -224,9 +276,8 @@ while running:
     # Draw the player at the center of the screen
     screen.blit(current_image, (WIDTH // 2 - player_width // 2, HEIGHT // 2 - player_height // 2))
 
-    if not paused:
-        for pyplay in pyplay_group:
-            screen.blit(pyplay.image, (pyplay.rect.x - camera_offset_x, pyplay.rect.y - camera_offset_y))
+    for pyplay in pyplay_group:
+        screen.blit(pyplay.image, (pyplay.rect.x - camera_offset_x, pyplay.rect.y - camera_offset_y))
 
     # Check for collisions between player and PyPlay objects
     collisions = pygame.sprite.spritecollide(player_sprite, pyplay_group, True)
