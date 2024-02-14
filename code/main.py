@@ -147,6 +147,12 @@ def catch_pokethona(pokethon):
             screen.blit(pokeball, (0 + (i - 2) * 180, HEIGHT - curr_anim.get_height() - 70 * (i - 3)))
         pygame.display.flip()
         pygame.time.delay(500)
+        if i == 1:
+            while True:
+                event = pygame.event.wait()
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_e:
+                        break
     catch_bg = pygame.image.load("../res/art/bg/catch_bg.png")
     catch_bg = pygame.transform.scale(catch_bg, (WIDTH, HEIGHT))
     screen.blit(catch_bg, (0, 0))  # Adjust coordinates as needed
