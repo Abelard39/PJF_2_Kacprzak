@@ -4,6 +4,8 @@ import pygame
 import sys
 
 from pokethon import Pokethon
+from fruit import Fruit
+from coin import Coin
 
 # Initialize Pygame
 pygame.init()
@@ -27,6 +29,8 @@ fight = False
 inventory = False
 
 available_pokethons = [bulbasaur, ivysaur, venusaur, charmander, charmeleon, charizard, squirtle, wartortle, blastoise]
+
+available_collectibles = [Fruit("Fruit"), Coin("Coin")]
 
 my_inventory = []
 
@@ -66,11 +70,11 @@ def get_pokethon_by_name(name):
     return None
 
 
-class PyPlay(pygame.sprite.Sprite):
-    def __init__(self, pokethon):
+class PyPlayObj(pygame.sprite.Sprite):
+    def __init__(self, collectible):
         super().__init__()
-        self.pokethon = pokethon
-        self.image = pokethon.get_image()
+        self.object = collectible
+        self.image = collectible.get_image()
         self.rect = self.image.get_rect()
         self.rect.center = (random.randint(50, WIDTH - 50), random.randint(50, HEIGHT - 50))
 
@@ -81,9 +85,8 @@ class PyPlay(pygame.sprite.Sprite):
 
 
 def spawn_pyplay():
-    random_pokethon = random.choice(available_pokethons)
-    pyplay = PyPlay(random_pokethon)
-    pyplay_group.add(pyplay)
+    pyplay_group.add(PyPlayObj(random.choice(available_pokethons)))
+    pyplay_group.add(PyPlayObj(random.choice(available_collectibles)))
 
 
 def remove_pyplay():
@@ -107,18 +110,22 @@ def show_inventory():
     i = 0
     j = 0
     for pokemon in inventory_dict:
+        if pokemon == "Coin":
+            show_poke = pygame.transform.scale(Coin("Coin").get_image(), (144, 144))
+        elif pokemon == "Fruit":
+            show_poke = pygame.transform.scale(Fruit("Fruit").get_image(), (144, 144))
+        else:
+            show_poke = pygame.transform.scale(get_pokethon_by_name(pokemon).get_image(), (144, 144))
         off = 0
         if i > 1:
             off = 16
         text = font.render(str(inventory_dict[pokemon]), True, (0, 0, 0))
-        show_poke = pygame.transform.scale(get_pokethon_by_name(pokemon).get_image(), (144, 144))
         screen.blit(show_poke, (32 + i * 192 + off, 32 + j * 192))
         screen.blit(text, (154 + i * 192 + off, 154 + j * 192))
         i += 1
         if i > 3:
             j += 1
             i = 0
-        pass
     pass
 
 
@@ -284,10 +291,13 @@ while running:
 
     # Perform actions when a collision is detected
     for collision in collisions:
-        print("Collision with", collision.pokethon.name)  # Example action, replace with your own logic
-        curr_pokethon = collision.pokethon
-        paused = True
-        fight = True
+        print("Collision with", collision.object.name)  # Example action, replace with your own logic
+        if collision.object.__class__.__name__ == "Pokethon":
+            curr_pokethon = collision.object
+            paused = True
+            fight = True
+        else:
+            my_inventory.append(collision.object)
 
     if paused:
         if fight:
